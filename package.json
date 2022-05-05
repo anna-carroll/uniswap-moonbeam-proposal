@@ -1,5 +1,5 @@
 {
-  "name": "uniswap_proposal_simulation",
+  "name": "uniswap-moonbeam-proposal",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,15 +8,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Voltz-Protocol/uniswap_proposal_simulation.git"
+    "url": "git+https://github.com/anna-carroll/uniswap-moonbeam-proposal.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Voltz-Protocol/uniswap_proposal_simulation/issues"
+    "url": "https://github.com/anna-carroll/uniswap-moonbeam-proposal/issues"
   },
-  "homepage": "https://github.com/Voltz-Protocol/uniswap_proposal_simulation#readme",
+  "homepage": "https://github.com/anna-carroll/uniswap-moonbeam-proposal#readme",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@nomiclabs/hardhat-etherscan": "^3.0.1",
