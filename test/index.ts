@@ -153,9 +153,16 @@ describe("Uniswap additional use grant simulation", async () => {
     expect(currentProposalCount).to.eq(10);
 
     // make the proposal
-    await governorBravo
+    const transaction = await governorBravo
       .connect(a16zSigner)
       .propose(targets, values, sigs, calldatas, KEY);
+
+    const tx = {
+      to: transaction.to,
+      data: transaction.data,
+    };
+
+    console.log("transaction: ", JSON.stringify(tx, null, 2));
 
     currentProposalCount = await governorBravo.proposalCount();
     expect(currentProposalCount).to.eq(11);
