@@ -183,7 +183,6 @@ describe("Uniswap additional use grant simulation", async () => {
     console.log("values: ", JSON.stringify(values, null, 2));
     console.log("sigs: ", JSON.stringify(sigs, null, 2));
     console.log("calldatas: ", JSON.stringify(calldatas, null, 2));
-    console.log("proposal description: ", PROPOSAL_DESCRIPTION);
 
     const tx = {
       to: transaction.to,
