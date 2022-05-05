@@ -1,14 +1,14 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import { waffle } from "hardhat";
-import { BigNumber, Contract, Wallet } from "ethers";
+import { Contract, Wallet } from "ethers";
 import {
   GOVERNOR_BRAVO_ABI,
   TIMELOCK_ABI,
   ENS_REGISTRY_ABI,
   ENS_PUBLIC_RESOLVER_ABI,
   UNI_ABI,
-} from "./utils";
+} from "./abis";
 import { namehash } from "@ethersproject/hash";
 import { keccak256 } from "@ethersproject/keccak256";
 import { utils } from "ethers";
@@ -17,16 +17,21 @@ import "hardhat";
 
 const { provider } = waffle;
 
-describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
-  let wallet: Wallet, other: Wallet;
+// NOTE: to run this simulation for any other additional use grants,
+// change the LICENSE_GRANTEE to reflect who is requesting an Additional Use Grant
+const LICENSE_GRANTEE = "Illusory Systems, Inc.";
 
-  async function advanceBlockHeight(blocks: number) {
-    const txns = [];
-    for (let i = 0; i < blocks; i++) {
-      txns.push(network.provider.send("evm_mine"));
-    }
-    await Promise.all(txns);
+
+async function advanceBlockHeight(blocks: number) {
+  const txns = [];
+  for (let i = 0; i < blocks; i++) {
+    txns.push(network.provider.send("evm_mine"));
   }
+  await Promise.all(txns);
+}
+
+describe("Uniswap additional use grant simulation", async () => {
+  let wallet: Wallet, other: Wallet;
 
   it("proposal simulation", async () => {
     // get the governor bravo contract
@@ -50,7 +55,6 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
     expect(timelockAddressFromGovernor).to.eq(timeLock.address);
 
     // wallet submits a proposal
-
     const NODE_TOP_LEVEL: string = namehash("uniswap.eth");
     const LABEL: string = keccak256(
       utils.toUtf8Bytes("v3-core-license-grants")
@@ -62,15 +66,15 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
     const TTL: number = 0;
 
     const NODE: string = namehash("v3-core-license-grants.uniswap.eth");
-    const KEY: string = "Gnosis LTD Uni v3 Additional Use Grant";
+    const KEY: string = `${LICENSE_GRANTEE} Uni v3 Additional Use Grant`;
     const VALUE: string = `
-    Gnosis LTD is granted an additional use grant to allow the Gnosis LTD to use the Uniswap V3 Core software code (which is made available to Gnosis LTD subject to license available at https://github.com/Uniswap/v3-core/blob/main/LICENSE (the “Uniswap Code”)).  	
-    As part of this additional use grant, the Gnosis LTD receives a limited worldwide license to use the Uniswap Code for the purposes of:
+    ${LICENSE_GRANTEE} is granted an additional use grant to allow the ${LICENSE_GRANTEE} to use the Uniswap V3 Core software code (which is made available to ${LICENSE_GRANTEE} subject to license available at https://github.com/Uniswap/v3-core/blob/main/LICENSE (the “Uniswap Code”)).  	
+    As part of this additional use grant, ${LICENSE_GRANTEE} receives a limited worldwide license to use the Uniswap Code for the purposes of:
     creating, deploying and making available aspects of an interest rate swap automated market maker (the “IRS AMM”); 
     to modify and update the IRS AMM over time; and 
     deploy the IRS AMM and portions thereof as smart contracts on blockchain-based applications and protocols.  
-    The Gnosis LTD is permitted to use subcontractors to do this work.  
-    This license is conditional Gnosis LTD complying with the terms of the Business Source License 1.1, made available at https://github.com/Uniswap/v3-core/blob/main/LICENSE.
+    ${LICENSE_GRANTEE} is permitted to use subcontractors to do this work.  
+    This license is conditional ${LICENSE_GRANTEE} complying with the terms of the Business Source License 1.1, made available at https://github.com/Uniswap/v3-core/blob/main/LICENSE.
     `;
     const ensRegistryInterface = new Interface(ENS_REGISTRY_ABI);
     const setSubnodeRecordCalldata = ensRegistryInterface.encodeFunctionData(
@@ -98,7 +102,6 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
     const values = [0, 0];
     const sigs = ["", ""];
     const calldatas = [setSubnodeRecordCalldata, setTextCalldata];
-    const description = "Gnosis LTD Additional Use Grant";
 
     const ensPublicResolver = new Contract(
       PUBLIC_ENS_RESOLVER_ADDRESS,
@@ -132,11 +135,11 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
     const uniAddress = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984";
     const uni = new Contract(uniAddress, UNI_ABI, provider);
 
-    let blockNumber = (await provider.getBlock("latest")).number;
+    const blockNumber = (await provider.getBlock("latest")).number;
     console.log("blockNumber OLD", blockNumber);
 
     // check the prior votes of a16z
-    let priorVotesA16Z = await uni.getPriorVotes(a16zAddress, blockNumber - 1);
+    const priorVotesA16Z = await uni.getPriorVotes(a16zAddress, blockNumber - 1);
     console.log("priorVotesA16Z", priorVotesA16Z);
 
     // transfer ether to a16z to execute the delegation transaction
@@ -152,7 +155,7 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
     // make the proposal
     await governorBravo
       .connect(a16zSigner)
-      .propose(targets, values, sigs, calldatas, description);
+      .propose(targets, values, sigs, calldatas, KEY);
 
     currentProposalCount = await governorBravo.proposalCount();
     expect(currentProposalCount).to.eq(11);
@@ -206,13 +209,13 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
       params: [172800],
     });
 
-    await advanceBlockHeight(1); //after changing the time mine one block
+    await advanceBlockHeight(1); // after changing the time mine one block
 
     await governorBravo.connect(a16zSigner).execute(11);
 
     proposalInfo = await governorBravo.proposals(11);
 
-    console.log(proposalInfo); //expect "executed"
+    console.log(proposalInfo); // expect "executed"
 
     // check ens records are correctly updated
     licenseText = await ensPublicResolver.text(NODE, KEY);
@@ -227,7 +230,7 @@ describe("Gnosis LTD / Uniswap additional use grant simulation", async () => {
       PUBLIC_ENS_RESOLVER_ADDRESS.toLowerCase()
     );
 
-    let ttlOfSubnode = await ensRegistry.ttl(NODE);
+    const ttlOfSubnode = await ensRegistry.ttl(NODE);
 
     expect(ttlOfSubnode).to.eq(TTL);
 
