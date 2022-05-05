@@ -21,6 +21,28 @@ const { provider } = waffle;
 // change the LICENSE_GRANTEE to reflect who is requesting an Additional Use Grant
 const LICENSE_GRANTEE = "Illusory Systems, Inc.";
 
+// replace PROPOSAL_DESCRIPTION with the information for the proposal
+const PROPOSAL_DESCRIPTION = "# Deploy Uniswap V3 on Moonbeam\n" +
+    "\n" +
+    "### Summary\n" +
+    "\n" +
+    "In support of furthering the vision of [Multichain Uniswap](https://uniswap.org/blog/multichain-uniswap), we at [Blockchain at Berkeley](https://blockchain.berkeley.edu/) are partnering with [Nomad](https://app.nomad.xyz/) to propose that the Uniswap community authorize Nomad (Illusory Systems, Inc) to deploy Uniswap V3 to [Moonbeam](https://moonbeam.network/).\n" +
+    "\n" +
+    "The timeline for deployment will be approximately 3-4 weeks following the completion of this Governance Proposal.\n" +
+    "\n" +
+    "### Proposal Links\n" +
+    "- Governance Proposal: [discussion](https://)\n" +
+    "- Consensus Check: [discussion](https://gov.uniswap.org/t/consensus-check-deploy-uniswap-v3-to-moonbeam/16624), [snapshot](https://snapshot.org/#/uniswap/proposal/QmcVpxCSkL8rPmZgow8uL2GbdPZtUKS3huY9aSExKNfEK6) (passed with 9.6M UNI in favor)\n" +
+    "- Temperature Check: [discussion](https://gov.uniswap.org/t/temperature-check-deploy-uniswap-v3-on-moonbeam/16572), [snapshot](https://snapshot.org/#/uniswap/proposal/QmaG6nJYW3xLeQwAa6xxhpbuYS8h6PVQpbx1vfqpqxAtik) (passed with 8.3M UNI in favor)\n" +
+    "\n" +
+    "\n" +
+    "### Description\n" +
+    "Moonbeam is a Polkadot parachain which features EVM-compatibility, allowing it to serve as a port-of-entry for Ethereum-native apps to participate in the greater Polkadot ecosystem. \n" +
+    "\n" +
+    "We believe deploying Uniswap to Moonbeam will bring the following benefits to the Uniswap community:\n" +
+    "* **Expansion into Polkadot**: Uniswap will be able to tap into a brand new market and all the community members in the Polkadot ecosystem. Moonbeam’s EVM-compatibility makes it simple to deploy existing Solidity code, while simultaneously providing access to other parachains using XCM. By leveraging XCM and Moonbeam’s position as the DeFi hub for Polkadot, Uniswap has the opportunity to become the premier AMM across Polkadot. \n" +
+    "* **Trust-minimized Governance**: Per Uniswap’s goal of becoming a multi-chain protocol while remaining trust-minimized, we propose using Nomad’s trust-minimized channels to deploy Uniswap V3 on Moonbeam. This can serve as an opportunity to test this improved decentralized governance application within a safe container, with the potential of rolling it out to other V3 deployments in the future.\n" +
+    "* **Rewards for Uniswap Grants Program**: Instead of simply offering liquidity mining incentives, we want to fund community members working to develop and enrich multichain experiences built with Uniswap. The Moonbeam Foundation will commit $2.5M to the Uniswap Grants Program to fund cross-chain development deployed within the Uniswap ecosystem, in order to further expand Uniswap’s multi-chain presence.\n";
 
 async function advanceBlockHeight(blocks: number) {
   const txns = [];
@@ -155,14 +177,13 @@ describe("Uniswap additional use grant simulation", async () => {
     // make the proposal
     const transaction = await governorBravo
       .connect(a16zSigner)
-      .propose(targets, values, sigs, calldatas, KEY);
+      .propose(targets, values, sigs, calldatas, PROPOSAL_DESCRIPTION);
 
     console.log("targets: ", JSON.stringify(targets, null, 2));
     console.log("values: ", JSON.stringify(values, null, 2));
     console.log("sigs: ", JSON.stringify(sigs, null, 2));
     console.log("calldatas: ", JSON.stringify(calldatas, null, 2));
-    console.log("KEY: ", JSON.stringify(KEY, null, 2));
-
+    console.log("proposal description: ", PROPOSAL_DESCRIPTION);
 
     const tx = {
       to: transaction.to,
