@@ -1,6 +1,6 @@
-# Uniswap Additional Use Grant for Gnosis LTD Proposal Simulation
+# Uniswap Additional Use Grant for Nomad - Simulation
 
-This repository runs a simulation of the Gnosis LTD's proposal to Uniswap Governance to request the Additional Use Grant. More details on how the grant is practically provided can be found in here https://github.com/Uniswap/deploy-v3 (under the Licensing section). The simulation is executed by running a test scenario in https://github.com/Gnosis LTD-Protocol/uniswap_proposal_simulation/blob/main/test/index.ts. 
+This repository runs a simulation of the Nomad's proposal to Uniswap Governance to request the Additional Use Grant. More details on how the grant is practically provided can be found in here https://github.com/Uniswap/deploy-v3 (under the Licensing section). The simulation is executed by running a test scenario in https://github.com/Gnosis LTD-Protocol/uniswap_proposal_simulation/blob/main/test/index.ts. 
 
 
 # Run the simulation
@@ -9,7 +9,7 @@ In order to run the simulation the following steps need to be taken:
 
 ## Setup
 ```
-git clone https://github.com/Gnosis LTD-Protocol/uniswap_proposal_simulation.git
+git clone https://github.com/anna-carroll/uniswap-moonbeam-proposal.git
 cd uniswap_proposal_simulation
 npm install
 ```
