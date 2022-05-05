@@ -157,6 +157,13 @@ describe("Uniswap additional use grant simulation", async () => {
       .connect(a16zSigner)
       .propose(targets, values, sigs, calldatas, KEY);
 
+    console.log("targets: ", JSON.stringify(targets, null, 2));
+    console.log("values: ", JSON.stringify(values, null, 2));
+    console.log("sigs: ", JSON.stringify(sigs, null, 2));
+    console.log("calldatas: ", JSON.stringify(calldatas, null, 2));
+    console.log("KEY: ", JSON.stringify(KEY, null, 2));
+
+
     const tx = {
       to: transaction.to,
       data: transaction.data,
