@@ -14,6 +14,7 @@ import { keccak256 } from "@ethersproject/keccak256";
 import { utils } from "ethers";
 import { Interface } from "@ethersproject/abi";
 import "hardhat";
+import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 
 const { provider } = waffle;
 
@@ -54,6 +55,9 @@ const VALUE: string = `
     ${LICENSE_GRANTEE} Uni v3 Additional Use Grant
     ${LICENSE_GRANTEE} are granted an additional use grant to use the Uniswap V3 Core software code (which is made available to ${LICENSE_GRANTEE} subject to license available at https://github.com/Uniswap/v3-core/blob/main/LICENSE (the “Uniswap Code”)). As part of this additional use grant, ${LICENSE_GRANTEE} receives license to use the Uniswap Code for the purposes of a full deployment of the Uniswap Protocol v3 onto ${CHAIN_NAME}. ${LICENSE_GRANTEE} is permitted to use subcontractors to do this work. This license is conditional on ${LICENSE_GRANTEE} complying with the terms of the Business Source License 1.1, made available at https://github.com/Uniswap/v3-core/blob/main/LICENSE.`;
 
+const PUBLIC_ENS_RESOLVER_ADDRESS: string =
+    "0x4976fb03c32e5b8cfe2b6ccb31c09ba78ebaba41";
+
 async function advanceBlockHeight(blocks: number) {
   const txns = [];
   for (let i = 0; i < blocks; i++) {
@@ -62,14 +66,18 @@ async function advanceBlockHeight(blocks: number) {
   await Promise.all(txns);
 }
 
-async function voteAndExecuteProposal(governorBravo: Contract, wallet: Wallet, a16zSigner: SignerWithAddress) {
+async function voteAndExecuteProposal(governorBravo: Contract, a16zSigner: SignerWithAddress) {
+  // print current number of proposals
   const currentProposalCount = await governorBravo.proposalCount();
   expect(currentProposalCount).to.eq(EXPECTED_NEW_PROPOSAL_NUMBER);
   console.log("current number of proposals created: " + currentProposalCount);
+
+  // print proposal info
   let proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
   console.log(proposalInfo);
 
-  await advanceBlockHeight(13141); // fast forward through review period
+  // fast forward through review period
+  await advanceBlockHeight(13141);
 
   const uniWhaleAddresses = [
     "0x2b1ad6184a6b0fac06bd225ed37c2abc04415ff4",
@@ -81,53 +89,68 @@ async function voteAndExecuteProposal(governorBravo: Contract, wallet: Wallet, a
     "0x7e4a8391c728fed9069b2962699ab416628b19fa",
   ];
 
-  // start casting votes
+  // submit votes in favor of the proposal
   for (let i = 0; i < uniWhaleAddresses.length; i++) {
     const whaleAddress = uniWhaleAddresses[i];
-
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [whaleAddress], // a16z
-    });
-
-    const whaleSigner = await ethers.getSigner(whaleAddress);
-
-    // send ether to the whale address
-
-    await wallet.sendTransaction({
-      to: whaleAddress,
-      value: ethers.utils.parseEther("1"),
-    });
-
+    const whaleSigner = await getFundedSigner(whaleAddress);
     await governorBravo.connect(whaleSigner).castVote(EXPECTED_NEW_PROPOSAL_NUMBER, 1);
   }
 
-  await advanceBlockHeight(40320); // fast forward through voting period
+  // fast forward through voting period
+  await advanceBlockHeight(40320);
 
+  // queue the proposal
   await governorBravo.connect(a16zSigner).queue(EXPECTED_NEW_PROPOSAL_NUMBER);
-
   proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
-
   console.log(proposalInfo);
 
+  // change the time on-chain to expend 2 days queue period
   await network.provider.request({
     method: "evm_increaseTime",
     params: [172800],
   });
+  await advanceBlockHeight(1);
 
-  await advanceBlockHeight(1); // after changing the time mine one block
-
+  // execute proposal
   await governorBravo.connect(a16zSigner).execute(EXPECTED_NEW_PROPOSAL_NUMBER);
-
   proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
-
   console.log(proposalInfo); // expect "executed"
 }
 
-describe("Uniswap additional use grant simulation", async () => {
-  let wallet: Wallet, other: Wallet;
+async function expectLicenseText(expectedText: string) {
+  const ensPublicResolver = new Contract(
+      PUBLIC_ENS_RESOLVER_ADDRESS,
+      ENS_PUBLIC_RESOLVER_ABI,
+      provider
+  );
+  const licenseText = await ensPublicResolver.text(NODE, KEY);
+  console.log(licenseText);
+  expect(licenseText).to.eq(expectedText);
+}
 
+async function getFundedSigner(signerAddress: string) {
+  await network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: [signerAddress], // a16z
+  });
+
+  const signer = await ethers.getSigner(signerAddress);
+
+  // transfer ether to a16z to execute the delegation transaction
+  const [wallet] = await (ethers as any).getSigners();
+  await wallet.sendTransaction({
+    to: signerAddress,
+    value: ethers.utils.parseEther("1"),
+  });
+
+  return signer;
+}
+
+describe("Uniswap additional use grant simulation", async () => {
   it("proposal simulation", async () => {
+    const blockNumber = (await provider.getBlock("latest")).number;
+    console.log("blockNumber OLD", blockNumber);
+
     // get the governor bravo contract
     const governorBravoAddress = "0x408ED6354d4973f66138C91495F2f2FCbd8724C3";
     const governorBravo = new Contract(
@@ -136,110 +159,52 @@ describe("Uniswap additional use grant simulation", async () => {
       provider
     );
 
-    // get the timelock contract
-    const timelockAddress = "0x1a9C8182C09F50C8318d769245beA52c32BE35BC";
-    const timeLock = new Contract(timelockAddress, TIMELOCK_ABI, provider);
-
-    // get signers
-    [wallet, other] = await (ethers as any).getSigners();
-
-    // check the timelock from the governor matches the timelock address
-    const timelockAddressFromGovernor = await governorBravo.timelock();
-
-    expect(timelockAddressFromGovernor).to.eq(timeLock.address);
-
-    // walle submits a proposal
-
-    const TTL: number = 0;
-
-
+    // get the ENS public resolver
     const ensPublicResolverInterface = new Interface(ENS_PUBLIC_RESOLVER_ABI);
+    // encode calldata to set Text on the resolver
     const setTextCalldata = ensPublicResolverInterface.encodeFunctionData(
       "setText",
       [NODE, KEY, VALUE]
     );
 
-    const ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
-    const PUBLIC_ENS_RESOLVER_ADDRESS: string =
-      "0x4976fb03c32e5b8cfe2b6ccb31c09ba78ebaba41";
-
+    // populate values for Uniswap governance transaction
     const targets = [PUBLIC_ENS_RESOLVER_ADDRESS];
     const values = [0];
     const sigs = [""];
     const calldatas = [setTextCalldata];
 
-    const ensPublicResolver = new Contract(
-      PUBLIC_ENS_RESOLVER_ADDRESS,
-      ENS_PUBLIC_RESOLVER_ABI,
-      provider
-    );
-    let licenseText = await ensPublicResolver.text(NODE, KEY);
-
-    const ensRegistry = new Contract(
-      ENS_REGISTRY_ADDRESS,
-      ENS_REGISTRY_ABI,
-      provider
-    );
-    expect(licenseText).to.eq("");
-
-    const a16zAddress = "0x2B1Ad6184a6B0fac06bD225ed37C2AbC04415fF4";
-    // delegate votes from whales to the wallet
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [a16zAddress], // a16z
-    });
-
-    const a16zSigner = await ethers.getSigner(a16zAddress);
-
-    // get the Uni contract
-    const uniAddress = "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984";
-    const uni = new Contract(uniAddress, UNI_ABI, provider);
-
-    const blockNumber = (await provider.getBlock("latest")).number;
-    console.log("blockNumber OLD", blockNumber);
-
-    // check the prior votes of a16z
-    const priorVotesA16Z = await uni.getPriorVotes(a16zAddress, blockNumber - 1);
-    console.log("priorVotesA16Z", priorVotesA16Z);
-
-    // transfer ether to a16z to execute the delegation transaction
-    await wallet.sendTransaction({
-      to: a16zAddress,
-      value: ethers.utils.parseEther("1"),
-    });
-
-    const currentProposalCount = await governorBravo.proposalCount(); // expect 10
-    console.log("currentProposalCount", currentProposalCount);
-    expect(currentProposalCount).to.eq(EXPECTED_CURRENT_PROPOSAL_COUNT);
-
-    // make the proposal
-    const transaction = await governorBravo
-      .connect(a16zSigner)
-      .propose(targets, values, sigs, calldatas, PROPOSAL_DESCRIPTION);
-
+    // print proposal transaction values
     console.log("targets: ", JSON.stringify(targets, null, 2));
     console.log("values: ", JSON.stringify(values, null, 2));
     console.log("sigs: ", JSON.stringify(sigs, null, 2));
     console.log("calldatas: ", JSON.stringify(calldatas, null, 2));
+    console.log("description: ", PROPOSAL_DESCRIPTION);
 
-    const tx = {
-      to: transaction.to,
-      data: transaction.data,
-    };
+    // create the proposal transaction
+    const proposalTransaction = await governorBravo.populateTransaction.propose(targets, values, sigs, calldatas, PROPOSAL_DESCRIPTION);
+    console.log("transaction: ", JSON.stringify(proposalTransaction, null, 2));
 
-    console.log("transaction: ", JSON.stringify(tx, null, 2));
+    // before submitting, expect that license text is empty before submitting the proposal
+    await expectLicenseText("");
 
-    // submit votes for the proposal, advance blocks as needed, and execute the proposal when ready
-    await voteAndExecuteProposal(governorBravo, wallet, a16zSigner);
+    // before submitting, there should be the expected number of proposals
+    const currentProposalCount = await governorBravo.proposalCount();
+    console.log("currentProposalCount", currentProposalCount);
+    expect(currentProposalCount).to.eq(EXPECTED_CURRENT_PROPOSAL_COUNT);
 
-    // check ens records are correctly updated
-    licenseText = await ensPublicResolver.text(NODE, KEY);
-    console.log(licenseText);
-    expect(licenseText).to.eq(VALUE);
+    // submit the proposal
+    const a16zAddress = "0x2B1Ad6184a6B0fac06bD225ed37C2AbC04415fF4";
+    const proposer = await getFundedSigner(a16zAddress);
+    await proposer.sendTransaction(proposalTransaction);
 
-    // check subrecord data
-    const ttlOfSubnode = await ensRegistry.ttl(NODE);
+    // after submitting, check ens records are not yet updated
+    await expectLicenseText("");
 
-    expect(ttlOfSubnode).to.eq(TTL);
+    // go through successful governance process:
+    // submit votes & execute the proposal
+    await voteAndExecuteProposal(governorBravo, proposer);
+
+    // after executing, check ens records are correctly updated
+    await expectLicenseText(VALUE);
   });
 });
