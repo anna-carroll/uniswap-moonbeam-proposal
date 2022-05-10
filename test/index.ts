@@ -62,6 +62,68 @@ async function advanceBlockHeight(blocks: number) {
   await Promise.all(txns);
 }
 
+async function voteAndExecuteProposal(governorBravo: Contract, wallet: Wallet, a16zSigner: SignerWithAddress) {
+  const currentProposalCount = await governorBravo.proposalCount();
+  expect(currentProposalCount).to.eq(EXPECTED_NEW_PROPOSAL_NUMBER);
+  console.log("current number of proposals created: " + currentProposalCount);
+  let proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
+  console.log(proposalInfo);
+
+  await advanceBlockHeight(13141); // fast forward through review period
+
+  const uniWhaleAddresses = [
+    "0x2b1ad6184a6b0fac06bd225ed37c2abc04415ff4",
+    "0xe02457a1459b6c49469bf658d4fe345c636326bf",
+    "0x8e4ed221fa034245f14205f781e0b13c5bd6a42e",
+    "0x61c8d4e4be6477bb49791540ff297ef30eaa01c2",
+    "0xa2bf1b0a7e079767b4701b5a1d9d5700eb42d1d1",
+    "0xe7925d190aea9279400cd9a005e33ceb9389cc2b",
+    "0x7e4a8391c728fed9069b2962699ab416628b19fa",
+  ];
+
+  // start casting votes
+  for (let i = 0; i < uniWhaleAddresses.length; i++) {
+    const whaleAddress = uniWhaleAddresses[i];
+
+    await network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [whaleAddress], // a16z
+    });
+
+    const whaleSigner = await ethers.getSigner(whaleAddress);
+
+    // send ether to the whale address
+
+    await wallet.sendTransaction({
+      to: whaleAddress,
+      value: ethers.utils.parseEther("1"),
+    });
+
+    await governorBravo.connect(whaleSigner).castVote(EXPECTED_NEW_PROPOSAL_NUMBER, 1);
+  }
+
+  await advanceBlockHeight(40320); // fast forward through voting period
+
+  await governorBravo.connect(a16zSigner).queue(EXPECTED_NEW_PROPOSAL_NUMBER);
+
+  proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
+
+  console.log(proposalInfo);
+
+  await network.provider.request({
+    method: "evm_increaseTime",
+    params: [172800],
+  });
+
+  await advanceBlockHeight(1); // after changing the time mine one block
+
+  await governorBravo.connect(a16zSigner).execute(EXPECTED_NEW_PROPOSAL_NUMBER);
+
+  proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
+
+  console.log(proposalInfo); // expect "executed"
+}
+
 describe("Uniswap additional use grant simulation", async () => {
   let wallet: Wallet, other: Wallet;
 
@@ -146,7 +208,7 @@ describe("Uniswap additional use grant simulation", async () => {
       value: ethers.utils.parseEther("1"),
     });
 
-    let currentProposalCount = await governorBravo.proposalCount(); // expect 10
+    const currentProposalCount = await governorBravo.proposalCount(); // expect 10
     console.log("currentProposalCount", currentProposalCount);
     expect(currentProposalCount).to.eq(EXPECTED_CURRENT_PROPOSAL_COUNT);
 
@@ -167,65 +229,8 @@ describe("Uniswap additional use grant simulation", async () => {
 
     console.log("transaction: ", JSON.stringify(tx, null, 2));
 
-    currentProposalCount = await governorBravo.proposalCount();
-    expect(currentProposalCount).to.eq(EXPECTED_NEW_PROPOSAL_NUMBER);
-    console.log("current number of proposals created: " + currentProposalCount);
-    let proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
-    console.log(proposalInfo);
-
-    await advanceBlockHeight(13141); // fast forward through review period
-
-    const uniWhaleAddresses = [
-      "0x2b1ad6184a6b0fac06bd225ed37c2abc04415ff4",
-      "0xe02457a1459b6c49469bf658d4fe345c636326bf",
-      "0x8e4ed221fa034245f14205f781e0b13c5bd6a42e",
-      "0x61c8d4e4be6477bb49791540ff297ef30eaa01c2",
-      "0xa2bf1b0a7e079767b4701b5a1d9d5700eb42d1d1",
-      "0xe7925d190aea9279400cd9a005e33ceb9389cc2b",
-      "0x7e4a8391c728fed9069b2962699ab416628b19fa",
-    ];
-
-    // start casting votes
-    for (let i = 0; i < uniWhaleAddresses.length; i++) {
-      const whaleAddress = uniWhaleAddresses[i];
-
-      await network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [whaleAddress], // a16z
-      });
-
-      const whaleSigner = await ethers.getSigner(whaleAddress);
-
-      // send ether to the whale address
-
-      await wallet.sendTransaction({
-        to: whaleAddress,
-        value: ethers.utils.parseEther("1"),
-      });
-
-      await governorBravo.connect(whaleSigner).castVote(EXPECTED_NEW_PROPOSAL_NUMBER, 1);
-    }
-
-    await advanceBlockHeight(40320); // fast forward through voting period
-
-    await governorBravo.connect(a16zSigner).queue(EXPECTED_NEW_PROPOSAL_NUMBER);
-
-    proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
-
-    console.log(proposalInfo);
-
-    await network.provider.request({
-      method: "evm_increaseTime",
-      params: [172800],
-    });
-
-    await advanceBlockHeight(1); // after changing the time mine one block
-
-    await governorBravo.connect(a16zSigner).execute(EXPECTED_NEW_PROPOSAL_NUMBER);
-
-    proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
-
-    console.log(proposalInfo); // expect "executed"
+    // submit votes for the proposal, advance blocks as needed, and execute the proposal when ready
+    await voteAndExecuteProposal(governorBravo, wallet, a16zSigner);
 
     // check ens records are correctly updated
     licenseText = await ensPublicResolver.text(NODE, KEY);
