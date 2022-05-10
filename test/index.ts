@@ -1,17 +1,12 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import { waffle } from "hardhat";
-import { Contract, Wallet } from "ethers";
+import { Contractlet } from "ethers";
 import {
   GOVERNOR_BRAVO_ABI,
-  TIMELOCK_ABI,
-  ENS_REGISTRY_ABI,
   ENS_PUBLIC_RESOLVER_ABI,
-  UNI_ABI,
 } from "./abis";
 import { namehash } from "@ethersproject/hash";
-import { keccak256 } from "@ethersproject/keccak256";
-import { utils } from "ethers";
 import { Interface } from "@ethersproject/abi";
 import "hardhat";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
