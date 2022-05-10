@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import { waffle } from "hardhat";
-import { Contractlet } from "ethers";
+import { Contract} from "ethers";
 import {
   GOVERNOR_BRAVO_ABI,
   ENS_PUBLIC_RESOLVER_ABI,
