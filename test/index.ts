@@ -19,30 +19,40 @@ const { provider } = waffle;
 
 // NOTE: to run this simulation for any other additional use grants,
 // change the LICENSE_GRANTEE to reflect who is requesting an Additional Use Grant
+const EXPECTED_CURRENT_PROPOSAL_COUNT = 18;
+const EXPECTED_NEW_PROPOSAL_NUMBER = EXPECTED_CURRENT_PROPOSAL_COUNT + 1;
 const LICENSE_GRANTEE = "Illusory Systems, Inc.";
+const CHAIN_NAME = "the Moonbeam blockchain";
 
 // replace PROPOSAL_DESCRIPTION with the information for the proposal
-const PROPOSAL_DESCRIPTION = "# Deploy Uniswap V3 on Moonbeam\n" +
-    "\n" +
-    "### Summary\n" +
-    "\n" +
-    "In support of furthering the vision of [Multichain Uniswap](https://uniswap.org/blog/multichain-uniswap), we at [Blockchain at Berkeley](https://blockchain.berkeley.edu/) are partnering with [Nomad](https://app.nomad.xyz/) to propose that the Uniswap community authorize Nomad (Illusory Systems, Inc) to deploy Uniswap V3 to [Moonbeam](https://moonbeam.network/).\n" +
-    "\n" +
-    "The timeline for deployment will be approximately 3-4 weeks following the completion of this Governance Proposal.\n" +
-    "\n" +
-    "### Proposal Links\n" +
-    "- Governance Proposal: [discussion](https://)\n" +
-    "- Consensus Check: [discussion](https://gov.uniswap.org/t/consensus-check-deploy-uniswap-v3-to-moonbeam/16624), [snapshot](https://snapshot.org/#/uniswap/proposal/QmcVpxCSkL8rPmZgow8uL2GbdPZtUKS3huY9aSExKNfEK6) (passed with 9.6M UNI in favor)\n" +
-    "- Temperature Check: [discussion](https://gov.uniswap.org/t/temperature-check-deploy-uniswap-v3-on-moonbeam/16572), [snapshot](https://snapshot.org/#/uniswap/proposal/QmaG6nJYW3xLeQwAa6xxhpbuYS8h6PVQpbx1vfqpqxAtik) (passed with 8.3M UNI in favor)\n" +
-    "\n" +
-    "\n" +
-    "### Description\n" +
-    "Moonbeam is a Polkadot parachain which features EVM-compatibility, allowing it to serve as a port-of-entry for Ethereum-native apps to participate in the greater Polkadot ecosystem. \n" +
-    "\n" +
-    "We believe deploying Uniswap to Moonbeam will bring the following benefits to the Uniswap community:\n" +
-    "* **Expansion into Polkadot**: Uniswap will be able to tap into a brand new market and all the community members in the Polkadot ecosystem. Moonbeam’s EVM-compatibility makes it simple to deploy existing Solidity code, while simultaneously providing access to other parachains using XCM. By leveraging XCM and Moonbeam’s position as the DeFi hub for Polkadot, Uniswap has the opportunity to become the premier AMM across Polkadot. \n" +
-    "* **Trust-minimized Governance**: Per Uniswap’s goal of becoming a multi-chain protocol while remaining trust-minimized, we propose using Nomad’s trust-minimized channels to deploy Uniswap V3 on Moonbeam. This can serve as an opportunity to test this improved decentralized governance application within a safe container, with the potential of rolling it out to other V3 deployments in the future.\n" +
-    "* **Rewards for Uniswap Grants Program**: Instead of simply offering liquidity mining incentives, we want to fund community members working to develop and enrich multichain experiences built with Uniswap. The Moonbeam Foundation will commit $2.5M to the Uniswap Grants Program to fund cross-chain development deployed within the Uniswap ecosystem, in order to further expand Uniswap’s multi-chain presence.\n";
+const PROPOSAL_DESCRIPTION = `# Deploy Uniswap V3 on Moonbeam \n
+### Summary \n
+\n
+In support of furthering the vision of [Multichain Uniswap](https://uniswap.org/blog/multichain-uniswap), we at [Blockchain at Berkeley](https://blockchain.berkeley.edu/) are partnering with [Nomad](https://app.nomad.xyz/) to propose that the Uniswap community authorize Nomad (Illusory Systems, Inc) to deploy Uniswap V3 to [Moonbeam](https://moonbeam.network/). \n
+\n
+The timeline for deployment will be approximately 3-4 weeks following the completion of this Governance Proposal.
+\n
+### Proposal Links \n
+- Governance Proposal: [discussion](https://gov.uniswap.org/t/governance-proposal-deploy-uniswap-v3-on-moonbeam/16759) \n
+- Consensus Check: [discussion](https://gov.uniswap.org/t/consensus-check-deploy-uniswap-v3-to-moonbeam/16624), [snapshot](https://snapshot.org/#/uniswap/proposal/QmcVpxCSkL8rPmZgow8uL2GbdPZtUKS3huY9aSExKNfEK6) (passed with 9.6M UNI in favor) \n
+- Temperature Check: [discussion](https://gov.uniswap.org/t/temperature-check-deploy-uniswap-v3-on-moonbeam/16572), [snapshot](https://snapshot.org/#/uniswap/proposal/QmaG6nJYW3xLeQwAa6xxhpbuYS8h6PVQpbx1vfqpqxAtik) (passed with 8.3M UNI in favor) \n
+\n
+\n
+### Description \n
+Moonbeam is a Polkadot parachain which features EVM-compatibility, allowing it to serve as a port-of-entry for Ethereum-native apps to participate in the greater Polkadot ecosystem. \n
+\n 
+We believe deploying Uniswap to Moonbeam will bring the following benefits to the Uniswap community:  \n
+* **Expansion into Polkadot**: Uniswap will be able to tap into a brand new market and all the community members in the Polkadot ecosystem. Moonbeam’s EVM-compatibility makes it simple to deploy existing Solidity code, while simultaneously providing access to other parachains using XCM. By leveraging XCM and Moonbeam’s position as the DeFi hub for Polkadot, Uniswap has the opportunity to become the premier AMM across Polkadot. \n
+* **Trust-minimized Governance**: Per Uniswap’s goal of becoming a multi-chain protocol while remaining trust-minimized, we propose using Nomad’s trust-minimized channels to deploy Uniswap V3 on Moonbeam. This can serve as an opportunity to test this improved decentralized governance application within a safe container, with the potential of rolling it out to other V3 deployments in the future. \n
+* **Rewards for Uniswap Grants Program**: Instead of simply offering liquidity mining incentives, we want to fund community members working to develop and enrich multichain experiences built with Uniswap. The Moonbeam Foundation will commit $2.5M to the Uniswap Grants Program to fund cross-chain development deployed within the Uniswap ecosystem, in order to further expand Uniswap’s multi-chain presence. \n
+`;
+
+// construct proposal code
+const NODE: string = namehash("v3-core-license-grants.uniswap.eth");
+const KEY: string = `${LICENSE_GRANTEE} Uni v3 Additional Use Grant`;
+const VALUE: string = `
+    ${LICENSE_GRANTEE} Uni v3 Additional Use Grant
+    ${LICENSE_GRANTEE} are granted an additional use grant to use the Uniswap V3 Core software code (which is made available to ${LICENSE_GRANTEE} subject to license available at https://github.com/Uniswap/v3-core/blob/main/LICENSE (the “Uniswap Code”)). As part of this additional use grant, ${LICENSE_GRANTEE} receives license to use the Uniswap Code for the purposes of a full deployment of the Uniswap Protocol v3 onto ${CHAIN_NAME}. ${LICENSE_GRANTEE} is permitted to use subcontractors to do this work. This license is conditional on ${LICENSE_GRANTEE} complying with the terms of the Business Source License 1.1, made available at https://github.com/Uniswap/v3-core/blob/main/LICENSE.`;
 
 async function advanceBlockHeight(blocks: number) {
   const txns = [];
@@ -76,39 +86,10 @@ describe("Uniswap additional use grant simulation", async () => {
 
     expect(timelockAddressFromGovernor).to.eq(timeLock.address);
 
-    // wallet submits a proposal
-    const NODE_TOP_LEVEL: string = namehash("uniswap.eth");
-    const LABEL: string = keccak256(
-      utils.toUtf8Bytes("v3-core-license-grants")
-    );
-    const OWNER_UNISWAP_GOVERNANCE_TIMELOCK: string =
-      "0x1a9C8182C09F50C8318d769245beA52c32BE35BC";
-    const RESOLVER_PUBLIC_ENS_RESOLVER: string =
-      "0x4976fb03c32e5b8cfe2b6ccb31c09ba78ebaba41";
+    // walle submits a proposal
+
     const TTL: number = 0;
 
-    const NODE: string = namehash("v3-core-license-grants.uniswap.eth");
-    const KEY: string = `${LICENSE_GRANTEE} Uni v3 Additional Use Grant`;
-    const VALUE: string = `
-    ${LICENSE_GRANTEE} is granted an additional use grant to allow the ${LICENSE_GRANTEE} to use the Uniswap V3 Core software code (which is made available to ${LICENSE_GRANTEE} subject to license available at https://github.com/Uniswap/v3-core/blob/main/LICENSE (the “Uniswap Code”)).  	
-    As part of this additional use grant, ${LICENSE_GRANTEE} receives a limited worldwide license to use the Uniswap Code for the purposes of:
-    creating, deploying and making available aspects of an interest rate swap automated market maker (the “IRS AMM”); 
-    to modify and update the IRS AMM over time; and 
-    deploy the IRS AMM and portions thereof as smart contracts on blockchain-based applications and protocols.  
-    ${LICENSE_GRANTEE} is permitted to use subcontractors to do this work.  
-    This license is conditional ${LICENSE_GRANTEE} complying with the terms of the Business Source License 1.1, made available at https://github.com/Uniswap/v3-core/blob/main/LICENSE.
-    `;
-    const ensRegistryInterface = new Interface(ENS_REGISTRY_ABI);
-    const setSubnodeRecordCalldata = ensRegistryInterface.encodeFunctionData(
-      "setSubnodeRecord",
-      [
-        NODE_TOP_LEVEL,
-        LABEL,
-        OWNER_UNISWAP_GOVERNANCE_TIMELOCK,
-        RESOLVER_PUBLIC_ENS_RESOLVER,
-        TTL,
-      ]
-    );
 
     const ensPublicResolverInterface = new Interface(ENS_PUBLIC_RESOLVER_ABI);
     const setTextCalldata = ensPublicResolverInterface.encodeFunctionData(
@@ -120,10 +101,10 @@ describe("Uniswap additional use grant simulation", async () => {
     const PUBLIC_ENS_RESOLVER_ADDRESS: string =
       "0x4976fb03c32e5b8cfe2b6ccb31c09ba78ebaba41";
 
-    const targets = [ENS_REGISTRY_ADDRESS, PUBLIC_ENS_RESOLVER_ADDRESS];
-    const values = [0, 0];
-    const sigs = ["", ""];
-    const calldatas = [setSubnodeRecordCalldata, setTextCalldata];
+    const targets = [PUBLIC_ENS_RESOLVER_ADDRESS];
+    const values = [0];
+    const sigs = [""];
+    const calldatas = [setTextCalldata];
 
     const ensPublicResolver = new Contract(
       PUBLIC_ENS_RESOLVER_ADDRESS,
@@ -137,12 +118,7 @@ describe("Uniswap additional use grant simulation", async () => {
       ENS_REGISTRY_ABI,
       provider
     );
-    let subnodeResolver = await ensRegistry.resolver(NODE);
-    let subnodeRecordExists = await ensRegistry.recordExists(NODE);
-    console.log("subnodeResolver", subnodeResolver);
-    expect(subnodeResolver).to.eq("0x0000000000000000000000000000000000000000");
     expect(licenseText).to.eq("");
-    expect(subnodeRecordExists).to.eq(false);
 
     const a16zAddress = "0x2B1Ad6184a6B0fac06bD225ed37C2AbC04415fF4";
     // delegate votes from whales to the wallet
@@ -172,7 +148,7 @@ describe("Uniswap additional use grant simulation", async () => {
 
     let currentProposalCount = await governorBravo.proposalCount(); // expect 10
     console.log("currentProposalCount", currentProposalCount);
-    expect(currentProposalCount).to.eq(10);
+    expect(currentProposalCount).to.eq(EXPECTED_CURRENT_PROPOSAL_COUNT);
 
     // make the proposal
     const transaction = await governorBravo
@@ -192,9 +168,9 @@ describe("Uniswap additional use grant simulation", async () => {
     console.log("transaction: ", JSON.stringify(tx, null, 2));
 
     currentProposalCount = await governorBravo.proposalCount();
-    expect(currentProposalCount).to.eq(11);
+    expect(currentProposalCount).to.eq(EXPECTED_NEW_PROPOSAL_NUMBER);
     console.log("current number of proposals created: " + currentProposalCount);
-    let proposalInfo = await governorBravo.proposals(11);
+    let proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
     console.log(proposalInfo);
 
     await advanceBlockHeight(13141); // fast forward through review period
@@ -227,14 +203,14 @@ describe("Uniswap additional use grant simulation", async () => {
         value: ethers.utils.parseEther("1"),
       });
 
-      await governorBravo.connect(whaleSigner).castVote(11, 1);
+      await governorBravo.connect(whaleSigner).castVote(EXPECTED_NEW_PROPOSAL_NUMBER, 1);
     }
 
     await advanceBlockHeight(40320); // fast forward through voting period
 
-    await governorBravo.connect(a16zSigner).queue(11);
+    await governorBravo.connect(a16zSigner).queue(EXPECTED_NEW_PROPOSAL_NUMBER);
 
-    proposalInfo = await governorBravo.proposals(11);
+    proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
 
     console.log(proposalInfo);
 
@@ -245,9 +221,9 @@ describe("Uniswap additional use grant simulation", async () => {
 
     await advanceBlockHeight(1); // after changing the time mine one block
 
-    await governorBravo.connect(a16zSigner).execute(11);
+    await governorBravo.connect(a16zSigner).execute(EXPECTED_NEW_PROPOSAL_NUMBER);
 
-    proposalInfo = await governorBravo.proposals(11);
+    proposalInfo = await governorBravo.proposals(EXPECTED_NEW_PROPOSAL_NUMBER);
 
     console.log(proposalInfo); // expect "executed"
 
@@ -257,18 +233,8 @@ describe("Uniswap additional use grant simulation", async () => {
     expect(licenseText).to.eq(VALUE);
 
     // check subrecord data
-    subnodeResolver = await ensRegistry.resolver(NODE);
-    console.log("subnodeResolver", subnodeResolver);
-
-    expect(subnodeResolver.toLowerCase()).to.eq(
-      PUBLIC_ENS_RESOLVER_ADDRESS.toLowerCase()
-    );
-
     const ttlOfSubnode = await ensRegistry.ttl(NODE);
 
     expect(ttlOfSubnode).to.eq(TTL);
-
-    subnodeRecordExists = await ensRegistry.recordExists(NODE);
-    expect(subnodeRecordExists).to.eq(true);
   });
 });
